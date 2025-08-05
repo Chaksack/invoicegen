@@ -28,11 +28,12 @@ try {
     console.log('Using Neon database connection');
     
     // Log connection string (with credentials masked)
-    const maskedUrl = connectionUrl.replace(/:\/\/([^:]+):([^@]+)@/, '://$1:****@');
+    // We know connectionUrl is defined here because of the if condition above
+    const maskedUrl = connectionUrl!.replace(/:\/\/([^:]+):([^@]+)@/, '://$1:****@');
     console.log('Connection URL (masked):', maskedUrl);
     
     // Use the Neon database connection string
-    sequelize = new Sequelize(connectionUrl, {
+    sequelize = new Sequelize(connectionUrl!, {
       dialect: 'postgres',
       logging: process.env.NODE_ENV === 'development' ? console.log : false,
       dialectOptions: {
