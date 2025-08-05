@@ -1,5 +1,17 @@
 import { Sequelize } from 'sequelize';
 
+// Add TypeScript declaration for global.__non_webpack_require__
+declare global {
+  interface Window {
+    __non_webpack_require__?: typeof require;
+  }
+}
+
+// Extend the globalThis type
+declare global {
+  var __non_webpack_require__: typeof require;
+}
+
 // Explicitly require pg to ensure it's loaded
 // This helps prevent the "Please install pg package manually" error in serverless environments
 let pgLoaded = false;
