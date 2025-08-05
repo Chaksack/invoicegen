@@ -58,13 +58,22 @@ const Settings: NextPage = () => {
     // Handle nested properties
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
-      setSettings(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof typeof prev],
-          [child]: value
-        }
-      }));
+      
+      setSettings(prev => {
+        // Create a safe copy of the parent object or an empty object if it doesn't exist
+        const parentObj = typeof prev[parent as keyof Settings] === 'object' && prev[parent as keyof Settings] !== null
+          ? { ...prev[parent as keyof Settings] as Record<string, any> }
+          : {};
+          
+        // Return the updated settings
+        return {
+          ...prev,
+          [parent]: {
+            ...parentObj,
+            [child]: value
+          }
+        };
+      });
     } else {
       setSettings(prev => ({
         ...prev,

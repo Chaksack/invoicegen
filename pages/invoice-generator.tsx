@@ -75,12 +75,19 @@ const InvoiceGenerator: NextPage = () => {
   useEffect(() => {
     if (id && typeof id === 'string') {
       loadInvoice(id);
-    } else if (user?.settings?.sender) {
+    } else if (user?.settings) {
       // Pre-fill sender information from user settings
+      // Using non-null assertion since we've already checked that settings exists
       setInvoice(prev => ({
         ...prev,
-        sender: user.settings.sender,
-        logoUrl: user.settings.logoUrl || ''
+        sender: user.settings!.sender || {
+          name: '',
+          address: '',
+          city: '',
+          postalCode: '',
+          country: ''
+        },
+        logoUrl: user.settings!.logoUrl || ''
       }));
     }
   }, [id, user]);
@@ -119,13 +126,22 @@ const InvoiceGenerator: NextPage = () => {
     // Handle nested properties
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
-      setInvoice(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof typeof prev],
-          [child]: value
-        }
-      }));
+      
+      setInvoice(prev => {
+        // Create a safe copy of the parent object or an empty object if it doesn't exist
+        const parentObj = typeof prev[parent as keyof Invoice] === 'object' && prev[parent as keyof Invoice] !== null
+          ? { ...prev[parent as keyof Invoice] as Record<string, any> }
+          : {};
+          
+        // Return the updated invoice
+        return {
+          ...prev,
+          [parent]: {
+            ...parentObj,
+            [child]: value
+          }
+        };
+      });
     } else {
       setInvoice(prev => ({
         ...prev,
