@@ -9,12 +9,6 @@
   "env": {
     "NODE_ENV": "production",
     "NEXT_PUBLIC_API_URL": "https://${VERCEL_URL}",
-
-    "DB_NAME": "invoicegen",
-    "DB_USER": "postgres",
-    "DB_PASSWORD": "postgres",
-    "DB_HOST": "localhost",
-    "DB_PORT": "5432",
     
     "JWT_SECRET": "48613ECE-B5E1-4810-AF3F-A650941FE643",
     

@@ -1,23 +1,43 @@
 import { Sequelize } from 'sequelize';
 
 // Initialize Sequelize with environment variables
-const sequelize = new Sequelize(
-  process.env.DB_NAME || 'invoicegen',
-  process.env.DB_USER || 'postgres',
-  process.env.DB_PASSWORD || 'postgres',
-  {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
+let sequelize: Sequelize;
+
+// Check if running on Vercel with Vercel Postgres
+if (process.env.POSTGRES_URL) {
+  console.log('Using Vercel Postgres connection');
+  // Use the Vercel Postgres connection string
+  sequelize = new Sequelize(process.env.POSTGRES_URL, {
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     dialectOptions: {
-      ssl: process.env.NODE_ENV === 'production' ? {
+      ssl: {
         require: true,
         rejectUnauthorized: false
-      } : false
+      }
     }
-  }
-);
+  });
+} else {
+  // Use traditional connection parameters for local development
+  console.log('Using local PostgreSQL connection');
+  sequelize = new Sequelize(
+    process.env.DB_NAME || 'invoicegen',
+    process.env.DB_USER || 'postgres',
+    process.env.DB_PASSWORD || 'postgres',
+    {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      dialect: 'postgres',
+      logging: process.env.NODE_ENV === 'development' ? console.log : false,
+      dialectOptions: {
+        ssl: process.env.NODE_ENV === 'production' ? {
+          require: true,
+          rejectUnauthorized: false
+        } : false
+      }
+    }
+  );
+}
 
 // Test the connection with retry logic
 const testConnection = async (retries = 5, delay = 5000) => {

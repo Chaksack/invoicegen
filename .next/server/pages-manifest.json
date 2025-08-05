@@ -1,1 +1,9 @@
-{"/_app":"pages/_app.js","/_document":"pages/_document.js","/api/auth/[...nextauth]":"pages/api/auth/[...nextauth].js","/api/auth/forgot-password":"pages/api/auth/forgot-password.js","/api/auth/login":"pages/api/auth/login.js","/api/auth/profile":"pages/api/auth/profile.js","/api/auth/register":"pages/api/auth/register.js","/api/auth/verify-email":"pages/api/auth/verify-email.js","/api/invoices/[id]":"pages/api/invoices/[id].js","/api/invoices":"pages/api/invoices.js","/api/users/settings":"pages/api/users/settings.js","/":"pages/index.html","/invoice/[id]":"pages/invoice/[id].html","/invoice-generator":"pages/invoice-generator.html","/invoices":"pages/invoices.html","/login":"pages/login.html","/register":"pages/register.html","/settings":"pages/settings.html","/_error":"pages/_error.js","/404":"pages/404.html"}
+{
+  "/_app": "pages/_app.js",
+  "/_error": "pages/_error.js",
+  "/_document": "pages/_document.js",
+  "/": "pages/index.js",
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+  "/api/auth/register": "pages/api/auth/register.js",
+  "/register": "pages/register.js"
+}
