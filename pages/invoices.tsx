@@ -7,9 +7,20 @@ import axios from 'axios';
 import { format } from 'date-fns';
 import { useAuth } from '../lib/context/AuthContext';
 
+// Import types from invoice-generator
+import type { Invoice, InvoiceItem } from './invoice-generator';
+
 // Read-only invoice view component
-const ReadOnlyInvoice = ({ invoice, onEdit, onDelete }) => {
-  const formatCurrency = (amount, currency) => {
+const ReadOnlyInvoice = ({ 
+  invoice, 
+  onEdit, 
+  onDelete 
+}: { 
+  invoice: Invoice; 
+  onEdit: (id: string) => void; 
+  onDelete: (id: string) => void; 
+}) => {
+  const formatCurrency = (amount: number, currency: string): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency
@@ -79,7 +90,7 @@ const ReadOnlyInvoice = ({ invoice, onEdit, onDelete }) => {
         <div className="w-full md:w-1/2 space-y-4">
           <div className="flex justify-between items-center text-sm">
             <span className="font-semibold text-gray-700">Subtotal:</span>
-            <span className="text-gray-800 font-bold">{formatCurrency(invoice.subtotal, invoice.currency)}</span>
+            <span className="text-gray-800 font-bold">{formatCurrency(invoice.subtotal || 0, invoice.currency)}</span>
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="font-semibold text-gray-700">Tax (%):</span>
@@ -87,13 +98,13 @@ const ReadOnlyInvoice = ({ invoice, onEdit, onDelete }) => {
           </div>
           <div className="flex justify-between items-center text-lg font-extrabold text-blue-800 border-t-2 border-blue-200 pt-4">
             <span>Total:</span>
-            <span>{formatCurrency(invoice.total, invoice.currency)}</span>
+            <span>{formatCurrency(invoice.total || 0, invoice.currency)}</span>
           </div>
         </div>
       </div>
       <div className="mt-8 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4">
         <button
-          onClick={() => onEdit(invoice.id)}
+          onClick={() => invoice.id && onEdit(invoice.id)}
           className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center text-sm"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -102,7 +113,7 @@ const ReadOnlyInvoice = ({ invoice, onEdit, onDelete }) => {
           Edit Invoice
         </button>
         <button
-          onClick={() => onDelete(invoice.id)}
+          onClick={() => invoice.id && onDelete(invoice.id)}
           className="bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg hover:bg-red-600 transition duration-300 flex items-center justify-center text-sm"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,39 +126,8 @@ const ReadOnlyInvoice = ({ invoice, onEdit, onDelete }) => {
   );
 };
 
-// Define types
-interface InvoiceItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  invoiceDate: string;
-  dueDate?: string;
-  logoUrl?: string;
-  sender: {
-    name: string;
-    address: string;
-    city: string;
-    postalCode: string;
-    country: string;
-  };
-  recipient: {
-    name: string;
-    address: string;
-    city: string;
-    postalCode: string;
-    country: string;
-  };
-  items: InvoiceItem[];
-  subtotal: number;
-  total: number;
-  taxRate: number;
-  currency: string;
+// Extended Invoice interface with additional fields needed for the list view
+interface InvoiceWithCreatedAt extends Invoice {
   createdAt: string;
 }
 
@@ -162,8 +142,8 @@ const InvoiceList: NextPage = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
   
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [invoices, setInvoices] = useState<InvoiceWithCreatedAt[]>([]);
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithCreatedAt | null>(null);
   const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
     page: 1,
@@ -196,7 +176,7 @@ const InvoiceList: NextPage = () => {
         // If there was a selected invoice, update it with the latest data
         if (selectedInvoice) {
           const updatedInvoice = response.data.data.invoices.find(
-            (invoice: Invoice) => invoice.id === selectedInvoice.id
+            (invoice: InvoiceWithCreatedAt) => invoice.id === selectedInvoice.id
           );
           if (updatedInvoice) {
             setSelectedInvoice(updatedInvoice);
@@ -214,7 +194,7 @@ const InvoiceList: NextPage = () => {
     loadInvoices(page);
   };
   
-  const viewInvoiceDetails = async (invoice: Invoice) => {
+  const viewInvoiceDetails = async (invoice: InvoiceWithCreatedAt) => {
     try {
       setIsLoading(true);
       setError('');
@@ -359,8 +339,10 @@ const InvoiceList: NextPage = () => {
                         <button 
                           onClick={(e) => { 
                             e.stopPropagation(); 
-                            confirmDelete(invoice.id); 
-                          }} 
+                            if (invoice.id) {
+                              confirmDelete(invoice.id);
+                            }
+                          }}
                           className="text-red-500 hover:text-red-700 transition duration-300 font-semibold text-sm"
                         >
                           Delete

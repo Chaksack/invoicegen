@@ -17,14 +17,14 @@ declare global {
 }
 
 // Define types
-interface InvoiceItem {
+export interface InvoiceItem {
   id: string;
   description: string;
   quantity: number;
   unitPrice: number;
 }
 
-interface Invoice {
+export interface Invoice {
   id?: string;
   invoiceNumber: string;
   invoiceDate: string;
