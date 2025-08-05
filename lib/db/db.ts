@@ -21,22 +21,28 @@ let sequelize: Sequelize;
 
 // Initialize Sequelize with proper error handling
 try {
-  // Check if running on Vercel with Vercel Postgres
-  if (process.env.POSTGRES_URL) {
-    console.log('Using Vercel Postgres connection');
+  // Check if running with Neon database or Vercel Postgres
+  if (process.env.DATABASE_URL || process.env.POSTGRES_URL) {
+    // Prioritize Neon database connection if available
+    const connectionUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    console.log('Using Neon database connection');
+    
     // Log connection string (with credentials masked)
-    const maskedUrl = process.env.POSTGRES_URL.replace(/:\/\/([^:]+):([^@]+)@/, '://$1:****@');
+    const maskedUrl = connectionUrl.replace(/:\/\/([^:]+):([^@]+)@/, '://$1:****@');
     console.log('Connection URL (masked):', maskedUrl);
     
-    // Use the Vercel Postgres connection string
-    sequelize = new Sequelize(process.env.POSTGRES_URL, {
+    // Use the Neon database connection string
+    sequelize = new Sequelize(connectionUrl, {
       dialect: 'postgres',
       logging: process.env.NODE_ENV === 'development' ? console.log : false,
       dialectOptions: {
         ssl: {
           require: true,
           rejectUnauthorized: false
-        }
+        },
+        // Add query timeout for Neon database (30 seconds)
+        // This helps prevent long-running queries from causing issues in serverless environments
+        statement_timeout: 30000
       },
       // Add retry logic for connection
       pool: {
@@ -44,8 +50,56 @@ try {
         min: 0,
         acquire: 30000,
         idle: 10000
+      },
+      // Set query timeout at Sequelize level as well
+      // This is a fallback in case the statement_timeout doesn't work
+      query: {
+        timeout: 30000 // 30 seconds
       }
     });
+  } else if (process.env.NODE_ENV === 'production') {
+    // In production, we should be using Vercel Postgres
+    console.error('⚠️ CRITICAL: POSTGRES_URL is not set in production environment');
+    console.error('Please set up Vercel Postgres for your project:');
+    console.error('1. Go to the Vercel dashboard');
+    console.error('2. Select your project');
+    console.error('3. Go to Storage tab');
+    console.error('4. Create a new Postgres database');
+    console.error('5. Connect it to your project');
+    
+    // Still create a Sequelize instance with local parameters as fallback,
+    // but this will likely fail in production without a local PostgreSQL server
+    console.log('Falling back to local PostgreSQL connection (this will likely fail in production)');
+    sequelize = new Sequelize(
+      process.env.DB_NAME || 'invoicegen',
+      process.env.DB_USER || 'postgres',
+      process.env.DB_PASSWORD || 'postgres',
+      {
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432'),
+        dialect: 'postgres',
+        logging: true, // Always log in this error case
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          },
+          // Add query timeout (30 seconds)
+          statement_timeout: 30000
+        },
+        // Add retry logic for connection
+        pool: {
+          max: 5,
+          min: 0,
+          acquire: 30000,
+          idle: 10000
+        },
+        // Set query timeout at Sequelize level
+        query: {
+          timeout: 30000 // 30 seconds
+        }
+      }
+    );
   } else {
     // Use traditional connection parameters for local development
     console.log('Using local PostgreSQL connection');
@@ -59,10 +113,10 @@ try {
         dialect: 'postgres',
         logging: process.env.NODE_ENV === 'development' ? console.log : false,
         dialectOptions: {
-          ssl: process.env.NODE_ENV === 'production' ? {
-            require: true,
-            rejectUnauthorized: false
-          } : false
+          ssl: false,
+          // Add query timeout for local development (30 seconds)
+          // This helps maintain consistent behavior with production
+          statement_timeout: 30000
         },
         // Add retry logic for connection
         pool: {
@@ -70,6 +124,10 @@ try {
           min: 0,
           acquire: 30000,
           idle: 10000
+        },
+        // Set query timeout at Sequelize level
+        query: {
+          timeout: 30000 // 30 seconds
         }
       }
     );
@@ -87,7 +145,8 @@ const testConnection = async (retries = 5, delay = 5000) => {
   // Log connection attempt with environment info
   console.log('Testing database connection with the following configuration:');
   console.log('- Environment:', process.env.NODE_ENV || 'development');
-  console.log('- Using Vercel Postgres:', !!process.env.POSTGRES_URL);
+  console.log('- Using Neon Database:', !!process.env.DATABASE_URL);
+  console.log('- Using Vercel Postgres:', !!process.env.POSTGRES_URL && !process.env.DATABASE_URL);
   console.log('- Dialect:', 'postgres');
   
   while (currentTry < retries) {

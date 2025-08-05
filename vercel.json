@@ -16,7 +16,19 @@
     "NEXTAUTH_SECRET": "C625463E-D989-43DC-8CAC-403F6432A776",
     
     "GOOGLE_CLIENT_ID": "651416699146-s0ku53dg42hhh748q43kd16aqmckmain.apps.googleusercontent.com",
-    "GOOGLE_CLIENT_SECRET": "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"
+    "GOOGLE_CLIENT_SECRET": "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",
+    
+    "DATABASE_URL": "postgres://neondb_owner:npg_N7SdMPwVfyG6@ep-empty-brook-abrrsc8g-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require",
+    "POSTGRES_URL": "postgres://neondb_owner:npg_N7SdMPwVfyG6@ep-empty-brook-abrrsc8g-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require",
+    "POSTGRES_URL_NON_POOLING": "postgres://neondb_owner:npg_N7SdMPwVfyG6@ep-empty-brook-abrrsc8g.eu-west-2.aws.neon.tech/neondb?sslmode=require",
+    "POSTGRES_USER": "neondb_owner",
+    "POSTGRES_HOST": "ep-empty-brook-abrrsc8g-pooler.eu-west-2.aws.neon.tech",
+    "POSTGRES_PASSWORD": "npg_N7SdMPwVfyG6",
+    "POSTGRES_DATABASE": "neondb",
+    
+    "NEXT_PUBLIC_STACK_PROJECT_ID": "00433d4a-4873-4c91-90ee-c0cab54ad53b",
+    "NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY": "pck_pdt64m3frxwhnyfe78tyvxv3cj5zvfcn3zgfajbaw95zr",
+    "STACK_SECRET_SERVER_KEY": "ssk_7c6p9zdaz09yjkeq4qkyq6jcz1r7szf5vmh4t3mjxsk40"
   },
   "build": {
     "env": {
