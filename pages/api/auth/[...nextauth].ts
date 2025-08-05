@@ -192,18 +192,36 @@ const getAuthOptions = async (): Promise<NextAuthOptions> => {
       async session({ session, token }) {
         try {
           // Add user ID to the session
-          if (session.user && token.userId) {
+          if (session?.user && token?.userId) {
             session.user.id = token.userId as string;
             
             // Add custom token to the session
             if (token.customToken) {
               session.customToken = token.customToken;
             }
+          } else {
+            // Log warning if session or token is missing expected properties
+            console.warn('Session callback received incomplete data:', { 
+              hasSession: !!session, 
+              hasUser: !!session?.user, 
+              hasToken: !!token, 
+              hasUserId: !!token?.userId 
+            });
           }
           
           return session;
         } catch (error) {
           console.error('Error in session callback:', error);
+          
+          // Return a basic session object to prevent complete failure
+          // This allows the application to continue functioning with limited capabilities
+          if (!session) {
+            return {
+              user: { id: '', name: null, email: null, image: null },
+              expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 1 day from now
+            };
+          }
+          
           return session;
         }
       },
@@ -214,6 +232,26 @@ const getAuthOptions = async (): Promise<NextAuthOptions> => {
 
 // Export a dynamic API handler that ensures DB is initialized
 export default async function auth(req: any, res: any) {
-  const authOptions = await getAuthOptions();
-  return await NextAuth(req, res, authOptions);
+  try {
+    // Initialize database first to ensure it's ready
+    await initializeAuth();
+    
+    const authOptions = await getAuthOptions();
+    
+    // Add debug logging in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('NextAuth request path:', req.url);
+      console.log('NextAuth request method:', req.method);
+    }
+    
+    return await NextAuth(req, res, authOptions);
+  } catch (error) {
+    console.error('Critical error in NextAuth handler:', error);
+    
+    // Return a proper error response instead of throwing
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Authentication service is temporarily unavailable'
+    });
+  }
 }
