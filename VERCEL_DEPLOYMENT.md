@@ -1,59 +1,69 @@
-# Vercel Deployment Guide
+# Deploying Invoice Generator to Vercel
 
-This document provides instructions for deploying the Invoice Generator application to Vercel.
+This document provides step-by-step instructions for deploying the Invoice Generator application to Vercel with Google authentication.
 
-## Environment Variables
+## Prerequisites
 
-Set up the following environment variables in the Vercel dashboard under Project Settings > Environment Variables:
+Before deploying to Vercel, you need:
 
-### Database Configuration
-- `DB_NAME`: Your PostgreSQL database name
-- `DB_USER`: Your PostgreSQL username
-- `DB_PASSWORD`: Your PostgreSQL password
-- `DB_HOST`: Your PostgreSQL host (e.g., from a managed PostgreSQL service)
-- `DB_PORT`: Your PostgreSQL port (typically 5432)
+1. A [Vercel account](https://vercel.com/signup)
+2. A [Google Cloud Platform account](https://console.cloud.google.com/) for Google OAuth
+3. A PostgreSQL database (e.g., [Supabase](https://supabase.com/), [Heroku Postgres](https://www.heroku.com/postgres), or [Railway](https://railway.app/))
+4. [Git](https://git-scm.com/) installed on your local machine
+5. [Vercel CLI](https://vercel.com/docs/cli) (optional, but recommended)
 
-### Authentication
-- `JWT_SECRET`: Secret key for JWT authentication (generate a strong random string)
+## Step 1: Set Up Google OAuth Credentials
 
-### Other
-- `NODE_ENV`: Set to "production"
-- Any other environment variables your application needs
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Navigate to "APIs & Services" > "Credentials"
+4. Click "Create Credentials" > "OAuth client ID"
+5. Select "Web application" as the application type
+6. Add a name for your OAuth client
+7. Add authorized JavaScript origins:
+   - For development: `http://localhost:3000`
+   - For production: `https://your-app-name.vercel.app`
+8. Add authorized redirect URIs:
+   - For development: `http://localhost:3000/api/auth/callback/google`
+   - For production: `https://your-app-name.vercel.app/api/auth/callback/google`
+9. Click "Create"
+10. Note down the Client ID and Client Secret
 
-## Database Setup
+## Step 2: Set Up a PostgreSQL Database
 
-Since Vercel functions are serverless, you should use a managed PostgreSQL service. Options include:
+### Option 1: Supabase
 
-1. **Vercel Postgres**: Vercel's built-in PostgreSQL service
-2. **Supabase**: Offers a generous free tier with PostgreSQL
-3. **Neon**: Serverless PostgreSQL specifically designed for this use case
-4. **Railway**: Simple setup with reasonable free tier
-5. **Heroku Postgres**: Reliable but requires a paid plan
-6. **AWS RDS**: Enterprise-grade but more complex to set up
+1. Create a [Supabase](https://supabase.com/) account
+2. Create a new project
+3. Go to "Settings" > "Database"
+4. Note down the database connection details:
+   - Host
+   - Port
+   - Database name
+   - User
+   - Password
+5. Enable SSL for the database connection
 
-### Database Connection String
+### Option 2: Heroku Postgres
 
-If your database provider offers a connection string, you can use that instead of individual parameters by adding a `DATABASE_URL` environment variable and modifying the `db.js` file to use it.
+1. Create a [Heroku](https://www.heroku.com/) account
+2. Create a new app
+3. Go to "Resources" and add the "Heroku Postgres" add-on
+4. Go to "Settings" > "View Credentials"
+5. Note down the database connection details
 
-## SSL Configuration
+### Option 3: Railway
 
-Many managed PostgreSQL services require SSL connections. If needed, update the database configuration in `server/src/config/db.js` to include SSL options:
+1. Create a [Railway](https://railway.app/) account
+2. Create a new project
+3. Add a PostgreSQL database
+4. Go to "Connect" and note down the connection details
 
-```
-{
-  dialect: 'postgres',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false // Set to true in production with proper certificates
-    }
-  }
-}
-```
+## Step 3: Deploy to Vercel
 
-## Deployment Steps
+### Using Vercel CLI (Recommended)
 
-1. Install the Vercel CLI:
+1. Install Vercel CLI:
    ```
    npm install -g vercel
    ```
@@ -63,54 +73,130 @@ Many managed PostgreSQL services require SSL connections. If needed, update the 
    vercel login
    ```
 
-3. Deploy your application:
+3. Navigate to your project directory:
+   ```
+   cd path/to/invoicegen
+   ```
+
+4. Deploy to Vercel:
    ```
    vercel
    ```
 
-4. For production deployment:
+5. Follow the prompts to configure your project
+   - Link to an existing project or create a new one
+   - Set the production branch (usually `main` or `master`)
+   - Confirm the deployment
+
+6. Set up environment variables:
+   ```
+   vercel env add DB_NAME
+   vercel env add DB_USER
+   vercel env add DB_PASSWORD
+   vercel env add DB_HOST
+   vercel env add DB_PORT
+   vercel env add JWT_SECRET
+   vercel env add NEXTAUTH_URL
+   vercel env add NEXTAUTH_SECRET
+   vercel env add GOOGLE_CLIENT_ID
+   vercel env add GOOGLE_CLIENT_SECRET
+   ```
+
+7. Deploy to production:
    ```
    vercel --prod
    ```
 
-## Monitoring and Logs
+### Using Vercel Dashboard
 
-- Use Vercel's built-in logs and monitoring to troubleshoot any issues after deployment
-- Check the Function Logs in the Vercel dashboard for backend errors
-- Use the Deployment Inspector to verify build outputs
+1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
+2. Go to the [Vercel Dashboard](https://vercel.com/dashboard)
+3. Click "New Project"
+4. Import your repository
+5. Configure your project:
+   - Framework Preset: Next.js
+   - Root Directory: ./
+   - Build Command: npm run build
+   - Output Directory: .next
+6. Click "Deploy"
+7. Once deployed, go to "Settings" > "Environment Variables"
+8. Add the following environment variables:
+   - `DB_NAME`: Your database name
+   - `DB_USER`: Your database user
+   - `DB_PASSWORD`: Your database password
+   - `DB_HOST`: Your database host
+   - `DB_PORT`: Your database port (usually 5432)
+   - `JWT_SECRET`: A secure random string for JWT encryption
+   - `NEXTAUTH_URL`: Your Vercel deployment URL (e.g., https://your-app-name.vercel.app)
+   - `NEXTAUTH_SECRET`: A secure random string for NextAuth.js
+   - `GOOGLE_CLIENT_ID`: Your Google OAuth client ID
+   - `GOOGLE_CLIENT_SECRET`: Your Google OAuth client secret
+   - `NEXT_PUBLIC_API_URL`: Your Vercel deployment URL (e.g., https://your-app-name.vercel.app)
+9. Click "Save" and redeploy your application
 
-## Custom Domain
+## Step 4: Verify Deployment
 
-To use a custom domain:
-
-1. Go to the Vercel dashboard
-2. Select your project
-3. Navigate to "Domains"
-4. Add your domain and follow the instructions to configure DNS
-
-## Limitations and Considerations
-
-1. **Cold Starts**: Serverless functions may experience cold starts, which can cause the first request after inactivity to be slower
-2. **Execution Time**: Vercel functions have a maximum execution time of 10 seconds (on the free plan)
-3. **Database Connections**: Be mindful of connection limits on your database service
-4. **Statelessness**: Serverless functions are stateless, so don't rely on local file storage or memory between invocations
+1. Visit your deployed application (e.g., https://your-app-name.vercel.app)
+2. Test the login and registration functionality
+3. Test the Google authentication
+4. Test the invoice creation and management functionality
 
 ## Troubleshooting
 
-If you encounter issues:
+### Database Connection Issues
 
-1. Check the Vercel build logs for any errors during deployment
-2. Verify that all environment variables are correctly set
-3. Ensure your database is accessible from Vercel's servers
-4. Check that your database schema is properly initialized
-5. Test API endpoints using tools like Postman or curl
+If you encounter database connection issues:
 
-## Local Development vs Production
+1. Check that your database credentials are correct
+2. Ensure your database allows connections from Vercel's IP addresses
+3. Verify that SSL is enabled for your database connection
+4. Check the Vercel logs for any error messages
 
-The application is configured to behave differently in development and production:
+### Google Authentication Issues
 
-- In development, the server starts normally and listens on a port
-- In production, the server runs as a serverless function
-- Database initialization happens on first request in production
+If Google authentication is not working:
 
-This setup ensures a smooth development experience while optimizing for serverless deployment.
+1. Verify that your Google OAuth credentials are correct
+2. Check that the authorized redirect URIs are correctly configured
+3. Ensure the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` environment variables are set correctly
+4. Check that the `NEXTAUTH_URL` is set to your Vercel deployment URL
+
+### General Deployment Issues
+
+If you encounter other deployment issues:
+
+1. Check the Vercel deployment logs
+2. Verify that all environment variables are set correctly
+3. Ensure your code works locally before deploying
+4. Try deploying with the Vercel CLI for more detailed error messages
+
+## Maintenance
+
+### Updating Your Application
+
+To update your application:
+
+1. Make changes to your code locally
+2. Test your changes
+3. Push your changes to your Git repository
+4. Vercel will automatically redeploy your application
+
+### Monitoring
+
+Vercel provides basic monitoring for your application. For more advanced monitoring:
+
+1. Consider integrating with a service like [Sentry](https://sentry.io/) for error tracking
+2. Set up [Vercel Analytics](https://vercel.com/analytics) for performance monitoring
+3. Use [Vercel Logs](https://vercel.com/docs/concepts/observability/logs) to debug issues
+
+## Security Considerations
+
+1. Always use environment variables for sensitive information
+2. Use strong, unique passwords for your database and other services
+3. Regularly update your dependencies to patch security vulnerabilities
+4. Consider enabling two-factor authentication for your Vercel and Google Cloud accounts
+5. Implement rate limiting for your API endpoints to prevent abuse
+
+## Conclusion
+
+Your Invoice Generator application is now deployed to Vercel with Google authentication. Users can sign in with their Google accounts or register with email and password. The application is production-ready and can be accessed from anywhere.
