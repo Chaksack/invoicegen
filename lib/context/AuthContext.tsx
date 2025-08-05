@@ -124,8 +124,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       setUser(user);
       
-      // Redirect to home page
-      router.push('/');
+      // Redirect to invoices page (main dashboard)
+      router.push('/invoices');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
@@ -156,7 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setError(null);
       
       // Use NextAuth signIn method with Google provider
-      const result = await signIn('google', { callbackUrl: '/' });
+      const result = await signIn('google', { callbackUrl: '/invoices' });
       
       // Note: We don't need to manually set the user or token here
       // as the useEffect hook will handle that when the session changes

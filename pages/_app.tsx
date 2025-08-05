@@ -28,10 +28,10 @@ function MyApp({ Component, pageProps }: AppProps) {
 function AppContent({ Component, pageProps }: { Component: AppProps['Component'], pageProps: AppProps['pageProps'] }) {
   const { user, loading } = useAuth();
   
-  // Show navigation only when user is authenticated
+  // Show navigation for all users
   return (
     <>
-      {user && !loading && <Navigation />}
+      {!loading && <Navigation />}
       <Component {...pageProps} />
     </>
   );

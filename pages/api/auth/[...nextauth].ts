@@ -87,10 +87,20 @@ const initializeAuth = async () => {
 // Create auth options function that ensures DB is initialized
 const getAuthOptions = async (): Promise<NextAuthOptions> => {
   // Wait for database initialization
-  await initializeAuth();
+  const dbInitSuccess = await initializeAuth();
   
-  // Only initialize adapter after DB is ready
-  const adapter = SequelizeAdapter(sequelize);
+  let adapter;
+  try {
+    // Only initialize adapter after DB is ready
+    console.log('Initializing SequelizeAdapter...');
+    adapter = SequelizeAdapter(sequelize);
+    console.log('SequelizeAdapter initialized successfully');
+  } catch (adapterError) {
+    console.error('Error initializing SequelizeAdapter:', adapterError);
+    // Continue without adapter if it fails to initialize
+    // This will fall back to JWT-only mode
+    console.warn('Falling back to JWT-only mode (no database adapter)');
+  }
   
   return {
     providers: [
@@ -99,7 +109,8 @@ const getAuthOptions = async (): Promise<NextAuthOptions> => {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       }),
     ],
-    adapter: adapter,
+    // Only include adapter if it was successfully initialized
+    ...(adapter ? { adapter } : {}),
     session: {
       strategy: 'jwt',
       maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -191,38 +202,59 @@ const getAuthOptions = async (): Promise<NextAuthOptions> => {
       },
       async session({ session, token }) {
         try {
-          // Add user ID to the session
-          if (session?.user && token?.userId) {
-            session.user.id = token.userId as string;
-            
-            // Add custom token to the session
-            if (token.customToken) {
-              session.customToken = token.customToken;
-            }
-          } else {
-            // Log warning if session or token is missing expected properties
-            console.warn('Session callback received incomplete data:', { 
-              hasSession: !!session, 
-              hasUser: !!session?.user, 
-              hasToken: !!token, 
-              hasUserId: !!token?.userId 
-            });
+          console.log('Session callback called with token:', { 
+            hasToken: !!token,
+            tokenKeys: token ? Object.keys(token) : [],
+            hasUserId: !!token?.userId
+          });
+          
+          // Create a safe copy of the session to avoid mutation issues
+          const safeSession = { ...session };
+          
+          // Ensure user object exists
+          if (!safeSession.user) {
+            console.warn('Session callback: session.user is undefined, creating empty user object');
+            safeSession.user = { id: '', name: null, email: null, image: null };
           }
           
-          return session;
+          // Add user ID to the session if available in token
+          if (token?.userId) {
+            safeSession.user.id = token.userId as string;
+            
+            // Add custom token to the session if available
+            if (token.customToken) {
+              safeSession.customToken = token.customToken;
+            }
+          } else {
+            // Log warning if token is missing expected properties
+            console.warn('Session callback: token is missing userId', { 
+              hasToken: !!token,
+              tokenKeys: token ? Object.keys(token) : []
+            });
+            
+            // Ensure user has an ID even if token doesn't provide one
+            if (!safeSession.user.id) {
+              safeSession.user.id = '';
+            }
+          }
+          
+          // Ensure expires field exists
+          if (!safeSession.expires) {
+            console.warn('Session callback: session.expires is undefined, setting default expiry');
+            safeSession.expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+          }
+          
+          console.log('Session callback returning session with user ID:', safeSession.user.id);
+          return safeSession;
         } catch (error) {
           console.error('Error in session callback:', error);
           
           // Return a basic session object to prevent complete failure
           // This allows the application to continue functioning with limited capabilities
-          if (!session) {
-            return {
-              user: { id: '', name: null, email: null, image: null },
-              expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 1 day from now
-            };
-          }
-          
-          return session;
+          return {
+            user: { id: '', name: null, email: null, image: null },
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+          };
         }
       },
     },
@@ -232,26 +264,68 @@ const getAuthOptions = async (): Promise<NextAuthOptions> => {
 
 // Export a dynamic API handler that ensures DB is initialized
 export default async function auth(req: any, res: any) {
+  // Log request details for all environments to help with debugging
+  console.log(`NextAuth request: ${req.method} ${req.url}`);
+  
   try {
     // Initialize database first to ensure it's ready
-    await initializeAuth();
+    console.log('Initializing auth database connection...');
+    const dbInitResult = await initializeAuth();
+    console.log('Database initialization result:', dbInitResult);
     
+    // Get auth options (this will initialize the adapter if database is ready)
+    console.log('Getting NextAuth options...');
     const authOptions = await getAuthOptions();
     
-    // Add debug logging in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('NextAuth request path:', req.url);
-      console.log('NextAuth request method:', req.method);
+    // Add more detailed logging
+    console.log('NextAuth handler processing request:', {
+      path: req.url,
+      method: req.method,
+      hasAdapter: !!authOptions.adapter,
+      providers: authOptions.providers.map(p => p.id).join(', '),
+      sessionStrategy: authOptions.session?.strategy || 'default'
+    });
+    
+    // Special handling for session endpoint to ensure it never fails with 500
+    if (req.url.includes('/api/auth/session')) {
+      console.log('Processing session request - applying enhanced error handling');
+      try {
+        return await NextAuth(req, res, authOptions);
+      } catch (sessionError) {
+        console.error('Error in session endpoint:', sessionError);
+        
+        // For session endpoint, return an empty but valid session instead of error
+        // This prevents client-side auth failures and allows graceful degradation
+        return res.status(200).json({
+          user: null,
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        });
+      }
     }
     
+    // For other auth endpoints, use standard NextAuth with error handling
     return await NextAuth(req, res, authOptions);
   } catch (error) {
     console.error('Critical error in NextAuth handler:', error);
     
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error(`Error name: ${error.name}`);
+      console.error(`Error message: ${error.message}`);
+      console.error(`Error stack: ${error.stack}`);
+    }
+    
+    // Check if response has already been sent
+    if (res.headersSent) {
+      console.warn('Headers already sent, cannot send error response');
+      return;
+    }
+    
     // Return a proper error response instead of throwing
     res.status(500).json({
       error: 'Internal Server Error',
-      message: 'Authentication service is temporarily unavailable'
+      message: 'Authentication service is temporarily unavailable',
+      timestamp: new Date().toISOString()
     });
   }
 }

@@ -2,18 +2,54 @@ import { Sequelize } from 'sequelize';
 
 // Explicitly require pg to ensure it's loaded
 // This helps prevent the "Please install pg package manually" error in serverless environments
+let pgLoaded = false;
+
+// First attempt - standard require
 try {
   require('pg');
-  console.log('Successfully loaded pg package');
+  console.log('Successfully loaded pg package (standard require)');
+  pgLoaded = true;
 } catch (error) {
-  console.error('Error loading pg package:', error);
-  // Try to load it again with a different approach
+  console.error('Error loading pg package (standard require):', error);
+}
+
+// Second attempt - using dynamic import if first attempt failed
+if (!pgLoaded) {
   try {
     const pg = require('pg');
-    console.log('Successfully loaded pg package on second attempt');
+    console.log('Successfully loaded pg package (variable assignment)');
+    pgLoaded = true;
   } catch (secondError) {
-    console.error('Failed to load pg package after multiple attempts:', secondError);
+    console.error('Error loading pg package (variable assignment):', secondError);
   }
+}
+
+// Third attempt - using path resolution if previous attempts failed
+if (!pgLoaded) {
+  try {
+    const path = require('path');
+    const pgPath = path.resolve(process.cwd(), 'node_modules/pg');
+    const pg = require(pgPath);
+    console.log('Successfully loaded pg package (path resolution)');
+    pgLoaded = true;
+  } catch (thirdError) {
+    console.error('Error loading pg package (path resolution):', thirdError);
+  }
+}
+
+// Final attempt - using global.__non_webpack_require__ if available (for Next.js)
+if (!pgLoaded && typeof global.__non_webpack_require__ === 'function') {
+  try {
+    const pg = global.__non_webpack_require__('pg');
+    console.log('Successfully loaded pg package (non-webpack require)');
+    pgLoaded = true;
+  } catch (fourthError) {
+    console.error('Error loading pg package (non-webpack require):', fourthError);
+  }
+}
+
+if (!pgLoaded) {
+  console.warn('⚠️ WARNING: Failed to load pg package after multiple attempts. This may cause issues with database connections.');
 }
 
 // Initialize Sequelize with environment variables

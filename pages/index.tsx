@@ -31,20 +31,20 @@ const Home: NextPage = () => {
       <main className="min-h-screen bg-gray-100">
         {/* Hero section */}
         <div className="bg-primary-700 text-white">
-          <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+          <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
             <div className="text-center">
-              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
                 Professional Invoices in Seconds
               </h1>
-              <p className="mt-4 text-xl max-w-3xl mx-auto">
+              <p className="mt-4 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
                 Create, manage, and download professional invoices with our easy-to-use invoice generator.
               </p>
-              <div className="mt-10">
-                <div className="flex justify-center space-x-4">
-                  <Link href="/login" className="btn btn-primary bg-white text-primary-700 hover:bg-gray-100">
+              <div className="mt-8 sm:mt-10">
+                <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                  <Link href="/login" className="btn btn-primary bg-white text-primary-700 hover:bg-gray-100 w-full sm:w-auto">
                     Login
                   </Link>
-                  <Link href="/register" className="btn btn-secondary border border-white hover:bg-primary-600">
+                  <Link href="/register" className="btn btn-secondary border border-white hover:bg-primary-600 w-full sm:w-auto">
                     Register
                   </Link>
                 </div>
@@ -54,35 +54,35 @@ const Home: NextPage = () => {
         </div>
         
         {/* Features section */}
-        <div className="py-16 bg-white">
+        <div className="py-12 sm:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-3xl font-extrabold text-gray-900">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
                 Features
               </h2>
-              <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+              <p className="mt-3 sm:mt-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
                 Everything you need to create and manage professional invoices.
               </p>
             </div>
             
-            <div className="mt-12 grid gap-8 grid-cols-1 md:grid-cols-3">
+            <div className="mt-8 sm:mt-12 grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               <div className="card">
-                <div className="text-xl font-semibold mb-2">Easy to Use</div>
-                <p className="text-gray-600">
+                <div className="text-lg sm:text-xl font-semibold mb-2">Easy to Use</div>
+                <p className="text-sm sm:text-base text-gray-600">
                   Create invoices in seconds with our intuitive interface. No accounting knowledge required.
                 </p>
               </div>
               
               <div className="card">
-                <div className="text-xl font-semibold mb-2">Professional Templates</div>
-                <p className="text-gray-600">
+                <div className="text-lg sm:text-xl font-semibold mb-2">Professional Templates</div>
+                <p className="text-sm sm:text-base text-gray-600">
                   Choose from professional invoice templates that make your business look great.
                 </p>
               </div>
               
               <div className="card">
-                <div className="text-xl font-semibold mb-2">Download & Share</div>
-                <p className="text-gray-600">
+                <div className="text-lg sm:text-xl font-semibold mb-2">Download & Share</div>
+                <p className="text-sm sm:text-base text-gray-600">
                   Download invoices as PDF or share them directly with your clients via a link.
                 </p>
               </div>
@@ -91,16 +91,16 @@ const Home: NextPage = () => {
         </div>
         
         {/* CTA section */}
-        <div className="bg-primary-50 py-16">
+        <div className="bg-primary-50 py-10 sm:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-extrabold text-primary-700">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-primary-700">
               Ready to get started?
             </h2>
-            <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="mt-3 sm:mt-4 text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
               Join thousands of businesses that use our invoice generator to create professional invoices.
             </p>
-            <div className="mt-8">
-              <Link href="/register" className="btn btn-primary">
+            <div className="mt-6 sm:mt-8">
+              <Link href="/register" className="btn btn-primary w-full sm:w-auto">
                 Create Free Account
               </Link>
             </div>
