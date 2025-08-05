@@ -56,6 +56,15 @@ const testConnection = async (retries = 5, delay = 5000) => {
 // Initialize database
 const initDb = async () => {
   try {
+    // First test the connection with retry logic
+    const connectionSuccessful = await testConnection();
+    
+    // If connection failed, return false
+    if (!connectionSuccessful) {
+      console.error('Database connection failed after multiple retries');
+      return false;
+    }
+    
     // Import models
     require('./models/User');
     require('./models/Invoice');

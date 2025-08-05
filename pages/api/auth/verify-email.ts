@@ -12,7 +12,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Initialize database connection
-    await initDb();
+    const dbInitialized = await initDb();
+    
+    // Check if database initialization was successful
+    if (!dbInitialized) {
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection failed. Please try again later.'
+      });
+    }
     
     const { token } = req.query;
     
@@ -57,8 +65,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     user.emailVerified = true;
     await user.save();
     
-    return handleSuccess(res, null, 'Email verified successfully');
-  } catch (error) {
+    // Check if the request wants HTML response (from browser) or JSON (from API client)
+    const acceptHeader = req.headers.accept || '';
+    if (acceptHeader.includes('text/html')) {
+      // Redirect to login page with success message
+      res.setHeader('Location', '/login?verified=true');
+      res.statusCode = 302; // Found - standard redirect status code
+      res.end();
+      return;
+    } else {
+      // Return JSON response for API clients
+      return handleSuccess(res, null, 'Email verified successfully');
+    }
+  } catch (error: unknown) {
+    console.error('Email verification error:', error);
+    
+    // Check for specific error types
+    if (error && typeof error === 'object' && 'name' in error) {
+      // Handle Sequelize connection errors
+      if (error.name === 'SequelizeConnectionError' || error.name === 'SequelizeConnectionRefusedError') {
+        return res.status(503).json({
+          success: false,
+          message: 'Database service unavailable. Please try again later.'
+        });
+      }
+      
+      // Handle Sequelize validation errors
+      if (error.name === 'SequelizeValidationError' && 'errors' in error && Array.isArray(error.errors)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          errors: error.errors.map((e: any) => e.message)
+        });
+      }
+      
+      // Handle JWT errors
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid token format'
+        });
+      }
+      
+      if (error.name === 'TokenExpiredError') {
+        return res.status(400).json({
+          success: false,
+          message: 'Token has expired. Please request a new verification link.'
+        });
+      }
+    }
+    
+    // For other errors, use the general error handler
     return handleError(res, error);
   }
 }
