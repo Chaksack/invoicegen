@@ -121,7 +121,12 @@ invoicegen/
    npm install
    ```
 
-3. Create a `.env` file in the root directory with the following variables:
+3. Copy the `.env.example` file to create your own `.env` file:
+   ```
+   cp .env.example .env
+   ```
+
+4. Update the `.env` file with your own values:
    ```
    # Database Configuration
    DB_NAME=invoicegen
@@ -130,19 +135,29 @@ invoicegen/
    DB_HOST=localhost
    DB_PORT=5432
 
-   # JWT Secret
-   JWT_SECRET=your_jwt_secret_key_change_this_in_production
+   # JWT Secret - Generate a secure random string for production
+   JWT_SECRET=your_jwt_secret_here
 
    # Next.js
    NEXT_PUBLIC_API_URL=http://localhost:3000
+
+   # NextAuth.js
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your_nextauth_secret_here
+
+   # Google OAuth - Get these from the Google Cloud Console
+   GOOGLE_CLIENT_ID=your_google_client_id_here
+   GOOGLE_CLIENT_SECRET=your_google_client_secret_here
    ```
 
-4. Start the development server:
+   > **IMPORTANT SECURITY NOTE**: Never commit your `.env` file to version control. It contains sensitive information like database credentials and API keys. The `.env` file is already added to `.gitignore` to prevent accidental commits.
+
+5. Start the development server:
    ```
    npm run dev
    ```
 
-5. The application will be available at `http://localhost:3000`
+6. The application will be available at `http://localhost:3000`
 
 ## Deployment to Vercel
 
@@ -185,6 +200,32 @@ invoicegen/
    ```
 
 2. The application will automatically create the necessary tables on startup.
+
+## Setting Up Google OAuth
+
+To enable Google authentication in the application:
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Navigate to "APIs & Services" > "Credentials"
+4. Click "Create Credentials" and select "OAuth client ID"
+5. Select "Web application" as the application type
+6. Add a name for your OAuth client
+7. Add authorized JavaScript origins:
+   - For local development: `http://localhost:3000`
+   - For production: your domain (e.g., `https://yourdomain.com`)
+8. Add authorized redirect URIs:
+   - For local development: `http://localhost:3000/api/auth/callback/google`
+   - For production: `https://yourdomain.com/api/auth/callback/google`
+9. Click "Create"
+10. Copy the generated Client ID and Client Secret
+11. Add these values to your `.env` file:
+    ```
+    GOOGLE_CLIENT_ID=your_client_id_here
+    GOOGLE_CLIENT_SECRET=your_client_secret_here
+    ```
+
+> **SECURITY NOTE**: Never share your Client Secret with anyone or commit it to version control. If your credentials are compromised, you can regenerate them in the Google Cloud Console.
 
 ## Changes from Original Implementation
 
