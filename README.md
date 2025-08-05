@@ -1,6 +1,6 @@
 # Invoice Generator Application
 
-A full-stack invoice generator application built with Next.js, React, and PostgreSQL.
+A full-stack invoice generator application built with React, Express.js, and PostgreSQL.
 
 ## Project Overview
 
@@ -14,14 +14,14 @@ This application allows users to:
 ## Technology Stack
 
 ### Frontend
-- Next.js for server-side rendering and API routes
 - React with TypeScript
+- React Router for navigation
 - Axios for API requests
 - Tailwind CSS for styling
 - HTML2Canvas and jsPDF for PDF generation
 
 ### Backend
-- Next.js API routes
+- Express.js for the API server
 - PostgreSQL for the database
 - Sequelize as the ORM
 - JWT for authentication
@@ -29,30 +29,36 @@ This application allows users to:
 
 ## Project Structure
 
-The project follows the Next.js structure:
+The project is organized into two main directories:
 
+### Client
+The client directory contains the React frontend application:
 ```
-invoicegen/
-├── components/         # Reusable UI components
-├── lib/                # Utility functions and modules
-│   ├── context/        # React context providers
-│   ├── db/             # Database connection and models
-│   └── api-utils.ts    # API utility functions
-├── pages/              # Page components and API routes
-│   ├── api/            # API routes
-│   │   ├── auth/       # Authentication endpoints
-│   │   ├── invoices/   # Invoice endpoints
-│   │   └── users/      # User endpoints
-│   ├── invoice/        # Invoice view page
-│   ├── _app.tsx        # Main application component
-│   ├── index.tsx       # Home page
-│   └── [...].tsx       # Other pages
-├── public/             # Static assets
-├── styles/             # Global styles
-├── .env                # Environment variables
-├── next.config.js      # Next.js configuration
-├── package.json        # Project dependencies
-└── vercel.json         # Vercel deployment configuration
+client/
+├── public/
+├── src/
+│   ├── components/       # Reusable UI components
+│   ├── context/          # React context providers
+│   ├── pages/            # Page components
+│   ├── App.tsx           # Main application component
+│   ├── index.tsx         # Application entry point
+│   └── index.css         # Global styles
+├── package.json
+└── tailwind.config.js
+```
+
+### Server
+The server directory contains the Express.js backend application:
+```
+server/
+├── src/
+│   ├── config/           # Configuration files
+│   ├── controllers/      # Request handlers
+│   ├── middleware/       # Express middleware
+│   ├── models/           # Sequelize models
+│   ├── routes/           # API routes
+│   └── index.js          # Server entry point
+└── package.json
 ```
 
 ## API Endpoints
@@ -62,7 +68,7 @@ invoicegen/
 - `POST /api/auth/login` - Login a user
 - `GET /api/auth/profile` - Get the current user's profile
 - `POST /api/auth/forgot-password` - Request a password reset
-- `GET /api/auth/verify-email` - Verify a user's email
+- `GET /api/auth/verify-email/:token` - Verify a user's email
 
 ### Invoices
 - `GET /api/invoices` - Get all invoices for the current user
@@ -109,93 +115,37 @@ invoicegen/
 - Node.js (v14 or higher)
 - PostgreSQL (v12 or higher)
 
-### Local Development Setup
-1. Clone the repository:
+### Backend Setup
+1. Navigate to the server directory: `cd server`
+2. Install dependencies: `npm install`
+3. Create a `.env` file with the following variables:
    ```
-   git clone https://github.com/yourusername/invoicegen.git
-   cd invoicegen
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Create a `.env` file in the root directory with the following variables:
-   ```
-   # Database Configuration
+   PORT=5000
    DB_NAME=invoicegen
    DB_USER=postgres
    DB_PASSWORD=postgres
    DB_HOST=localhost
    DB_PORT=5432
-
-   # JWT Secret
-   JWT_SECRET=your_jwt_secret_key_change_this_in_production
-
-   # Next.js
-   NEXT_PUBLIC_API_URL=http://localhost:3000
+   JWT_SECRET=your_jwt_secret
    ```
+4. Start the server: `npm start`
 
-4. Start the development server:
-   ```
-   npm run dev
-   ```
-
-5. The application will be available at `http://localhost:3000`
-
-## Deployment to Vercel
-
-1. Create a Vercel account at [vercel.com](https://vercel.com) if you don't have one.
-
-2. Install the Vercel CLI:
-   ```
-   npm install -g vercel
-   ```
-
-3. Login to Vercel:
-   ```
-   vercel login
-   ```
-
-4. Deploy the application:
-   ```
-   vercel
-   ```
-
-5. For production deployment:
-   ```
-   vercel --prod
-   ```
-
-6. Configure environment variables in the Vercel dashboard:
-   - DB_NAME
-   - DB_USER
-   - DB_PASSWORD
-   - DB_HOST
-   - DB_PORT
-   - JWT_SECRET
-   - NEXT_PUBLIC_API_URL (set to your Vercel deployment URL)
-
-## Database Setup
-
-1. Create a PostgreSQL database:
-   ```
-   createdb invoicegen
-   ```
-
-2. The application will automatically create the necessary tables on startup.
+### Frontend Setup
+1. Navigate to the client directory: `cd client`
+2. Install dependencies: `npm install`
+3. Start the development server: `npm start`
+4. The application will be available at `http://localhost:3000`
 
 ## Changes from Original Implementation
 
-The original implementation used a separate client-server architecture with React for the frontend and Express.js for the backend. This version has been migrated to Next.js to leverage:
+The original implementation used Firebase for authentication and Firestore for data storage. This version has been modified to use:
 
-1. Server-side rendering for improved performance and SEO
-2. API routes for backend functionality
-3. Simplified deployment with a single codebase
-4. Improved developer experience with a unified project structure
+1. PostgreSQL with Sequelize ORM for data storage
+2. Express.js for the backend API
+3. JWT for authentication
+4. Custom user management with email verification
 
-The core functionality remains the same, with users able to create, manage, and share invoices.
+The frontend React application has been restructured to work with the Express.js backend while maintaining the same functionality and user experience.
 
 ## Future Improvements
 
@@ -205,4 +155,3 @@ The core functionality remains the same, with users able to create, manage, and 
 - Implement multi-language support
 - Add support for recurring invoices
 - Implement payment integration
-- Add analytics dashboard for invoice tracking

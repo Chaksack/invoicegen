@@ -1,31 +1,27 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "regions": ["iad1"],
-  "env": {
-    "NODE_ENV": "production",
-    "NEXT_PUBLIC_API_URL": "https://your-app-name.vercel.app",
-    
-    "DB_NAME": "your_db_name",
-    "DB_USER": "your_db_user",
-    "DB_PASSWORD": "your_db_password",
-    "DB_HOST": "your_db_host",
-    "DB_PORT": "5432",
-    
-    "JWT_SECRET": "your_jwt_secret_key_change_this_in_production",
-    
-    "NEXTAUTH_URL": "https://your-app-name.vercel.app",
-    "NEXTAUTH_SECRET": "your_nextauth_secret_key_change_this_in_production",
-    
-    "GOOGLE_CLIENT_ID": "your_google_client_id",
-    "GOOGLE_CLIENT_SECRET": "your_google_client_secret"
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_API_URL": "https://your-app-name.vercel.app"
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
+    },
+    {
+      "src": "server/src/index.js",
+      "use": "@vercel/node"
     }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server/src/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "client/build/$1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
   }
 }
