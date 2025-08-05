@@ -51,11 +51,6 @@ try {
         min: 0,
         acquire: 30000,
         idle: 10000
-      },
-      // Set query timeout at Sequelize level as well
-      // This is a fallback in case the statement_timeout doesn't work
-      query: {
-        timeout: 30000 // 30 seconds
       }
     });
   } else if (process.env.NODE_ENV === 'production') {
@@ -94,10 +89,6 @@ try {
           min: 0,
           acquire: 30000,
           idle: 10000
-        },
-        // Set query timeout at Sequelize level
-        query: {
-          timeout: 30000 // 30 seconds
         }
       }
     );
@@ -125,10 +116,6 @@ try {
           min: 0,
           acquire: 30000,
           idle: 10000
-        },
-        // Set query timeout at Sequelize level
-        query: {
-          timeout: 30000 // 30 seconds
         }
       }
     );
